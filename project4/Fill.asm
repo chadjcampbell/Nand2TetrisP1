@@ -9,6 +9,11 @@
     D=A
     @addr 
     M=D
+    // set top of screen RAM register address
+    @24575
+    D=A
+    @topscreen
+    M=D
     // set iterator to 0
     @i
     M=0 
@@ -23,14 +28,21 @@
 
 // TODO - FIX THESE LOOPS
 (FILLLOOP)
+    @i
+    D=M
+    @topscreen
+    D=D-M
+    @MAINLOOP
+    D;JGT
+    // this fills the register and increments i and address
     @addr
     A=M
     M=-1
     @i
     M=M+1
-    D=M
     @addr
-    M=D+M
+    M=M+1
+    // check if KBD changed
     @KBD
     D=M
     @MAINLOOP
@@ -39,17 +51,24 @@
     0;JMP
 
 (EMPTYLOOP)
+    @i
+    D=M
+    @topscreen
+    D=D-M
+    @MAINLOOP
+    D;JGT
+    // this fills the register and increments i and address
     @addr
     A=M
     M=0
     @i
     M=M+1
-    D=M
     @addr
-    M=D+M
+    M=M+1
+    // check if KBD changed
     @KBD
     D=M
+    @EMPTYLOOP
+    D;JEQ
     @MAINLOOP
     D;JEQ
-    @EMPTYLOOP
-    0;JMP
