@@ -35,11 +35,11 @@ CHIP CPU {
     // main chips
 	Mux16(a=ALUout, b=instruction, sel=Ainstruction, out=preARegMuxOut);
     ARegister(in=preARegMuxOut, load=loadARegister, out=ARegOut, out[0..14]=addressM);
-    DRegister(in=ALUout, load=instruction[4], out=DRegOut);
-    Mux16(a=ARegOut, b=inM, sel=instruction[12], out=preALUMuxOut);
+    DRegister(in=ALUout, load=cAndLoadD, out=DRegOut);
+    Mux16(a=ARegOut, b=inM, sel=cAndLoadM, out=preALUMuxOut);
     ALU(x=DRegOut, y=preALUMuxOut, zx=cAndzx, nx=cAndnx, zy=cAndzy, ny=cAndny, f=cAndf, no=cAndno, out=ALUout, zr=zr, ng=ng, out=outM);
-    // TODO - fix pc load(jump) criteria
-    PC(in=ARegOut, load=false, inc=true, reset=reset, out[0..14]=pc);
+    // TODO - fix the reset bit
+    PC(in=ARegOut, load=loadPC, inc=count, reset=reset, out[0..14]=pc);
 
     // helper chips
     Not(in=instruction[15], out=Ainstruction); // if MSB op code=0, it's and A instruction
@@ -52,4 +52,21 @@ CHIP CPU {
     And(a=instruction[15], b=instruction[8], out=cAndny);
     And(a=instruction[15], b=instruction[7], out=cAndf);
     And(a=instruction[15], b=instruction[6], out=cAndno);
+    And(a=instruction[15], b=instruction[4], out=cAndLoadD);
+    And(a=instruction[15], b=instruction[12], out=cAndLoadM);
+    And(a=instruction[15], b=instruction[0], out=cAndJ3);
+    And(a=instruction[15], b=instruction[1], out=cAndJ2);
+    And(a=instruction[15], b=instruction[2], out=cAndJ1);
+    // jump bits
+    And(a=zr, b=ng, out=outGTzero);
+    Not(in=zr, out=notZero);
+    Not(in=ng, out=notNeg);
+    And(a=notZero, b=notNeg, out=notNegOrZero);
+    And(a=cAndJ1, b=ng, out=outLTzeroAndJ1);
+    And(a=zr, b=instruction[1], out=outEQzeroAndJ2);
+    And(a=notNegOrZero, b=cAndJ3, out=outGTzeroAndJ3);
+    Or(a=outLTzeroAndJ1, b=outEQzeroAndJ2, out=loadPC1);
+    Or(a=outLTzeroAndJ1, b=outGTzeroAndJ3, out=loadPC2);
+    Or(a=loadPC1, b=loadPC2, out=loadPC);
+    Not(in=loadPC, out=count);
 }
