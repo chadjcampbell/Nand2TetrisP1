@@ -58,13 +58,15 @@ CHIP CPU {
     And(a=instruction[15], b=instruction[0], out=cAndJ3);
     And(a=instruction[15], b=instruction[1], out=cAndJ2);
     And(a=instruction[15], b=instruction[2], out=cAndJ1);
+    And(a=instruction[15], b=zr, out=cAndzr);
+    And(a=instruction[15], b=ng, out=cAndng);
     // jump bits
-    And(a=zr, b=ng, out=outGTzero);
-    Not(in=zr, out=notZero);
-    Not(in=ng, out=notNeg);
+    And(a=cAndzr, b=cAndng, out=outGTzero);
+    Not(in=cAndzr, out=notZero);
+    Not(in=cAndng, out=notNeg);
     And(a=notZero, b=notNeg, out=notNegOrZero);
-    And(a=cAndJ1, b=ng, out=outLTzeroAndJ1);
-    And(a=zr, b=instruction[1], out=outEQzeroAndJ2);
+    And(a=cAndJ1, b=cAndng, out=outLTzeroAndJ1);
+    And(a=cAndzr, b=instruction[1], out=outEQzeroAndJ2);
     And(a=notNegOrZero, b=cAndJ3, out=outGTzeroAndJ3);
     Or(a=outLTzeroAndJ1, b=outEQzeroAndJ2, out=loadPC1);
     Or(a=outLTzeroAndJ1, b=outGTzeroAndJ3, out=loadPC2);
